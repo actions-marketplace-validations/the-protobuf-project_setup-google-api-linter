@@ -1,0 +1,11 @@
+# Example Buf module used by the golden test and by the buf-integration docs.
+#
+# It declares a dependency on the Google APIs module on the Buf Schema Registry
+# so that the example proto can import `google/api/*`. The action's buf
+# integration resolves this dependency (via `buf export`) before linting, so
+# api-linter can find the imported types.
+version: v2
+modules:
+  - path: .
+deps:
+  - buf.build/googleapis/googleapis

@@ -10,6 +10,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as core from "@actions/core";
+import { resolveBufImports } from "./buf.ts";
 import { copyReport, ensureParentDir, resolveProtoFiles } from "./files.ts";
 import { getInputs } from "./inputs.ts";
 import { installApiLinter } from "./installer.ts";
@@ -104,7 +105,15 @@ async function run(): Promise<void> {
   }
   core.info(`Linting ${files.length} proto file(s) with api-linter v${version}.`);
 
-  const { jsonPath, report } = await lintToJson(binary, inputs, files);
+  // When buf integration is enabled, export its dependencies and add them to
+  // the linter's import paths so imported protos resolve.
+  let lintInputs = inputs;
+  if (inputs.buf) {
+    const vendorDir = await resolveBufImports(inputs);
+    lintInputs = { ...inputs, protoPaths: [...inputs.protoPaths, vendorDir] };
+  }
+
+  const { jsonPath, report } = await lintToJson(binary, lintInputs, files);
   const total = countProblems(report);
 
   if (inputs.annotate) {
@@ -114,7 +123,7 @@ async function run(): Promise<void> {
     await writeSummary(report, version);
   }
 
-  const resultsPath = await writeReportFile(binary, inputs, files, jsonPath);
+  const resultsPath = await writeReportFile(binary, lintInputs, files, jsonPath);
   core.setOutput("problem-count", String(total));
   core.setOutput("results-path", resultsPath);
 
@@ -127,7 +136,7 @@ async function run(): Promise<void> {
     }
     return;
   }
-  core.info("api-linter reported no problems. ✅");
+  core.info("api-linter reported no problems.");
 }
 
 run().catch((error: unknown) => {

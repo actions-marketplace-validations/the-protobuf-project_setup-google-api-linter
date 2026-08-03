@@ -71,6 +71,12 @@ export interface ActionInputs {
   readonly descriptorSetIn: readonly string[];
   /** Skip compilation and lint the descriptor set instead. */
   readonly skipCompilation: boolean;
+  /** Resolve `buf.yaml` dependencies (via buf) before linting. */
+  readonly buf: boolean;
+  /** The buf input to export (a directory containing `buf.yaml`). */
+  readonly bufInput: string;
+  /** buf CLI version to install when buf is not already on `PATH`. */
+  readonly bufVersion: string;
   /** Format for the written report file. */
   readonly outputFormat: OutputFormat;
   /** Where to write the report, or "" to skip writing a file. */

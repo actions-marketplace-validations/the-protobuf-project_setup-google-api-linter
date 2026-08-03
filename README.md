@@ -93,6 +93,9 @@ each problem, writes a job summary, and fails the job if any problem is found.
 | `ignore-comment-disables` | `false`        | Ignore in-proto disable comments (strict enforcement).                |
 | `descriptor-set-in`       | `""`           | Newline/comma-separated FileDescriptorSet files for imports.          |
 | `skip-compilation`        | `false`        | Skip compilation and lint `descriptor-set-in` instead.                |
+| `buf`                     | `false`        | Resolve `buf.yaml` dependencies (via buf) before linting.             |
+| `buf-input`               | `.`            | buf input to export when `buf` is enabled (a dir with `buf.yaml`).    |
+| `buf-version`             | `latest`       | buf CLI version to install when buf is not already on PATH.           |
 | `output-format`           | `json`         | Report file format: `json`, `yaml`, `github` or `summary`.            |
 | `output-path`             | `""`           | Where to write the report. When set, exposed via `results-path`.      |
 | `annotate`                | `true`         | Emit inline GitHub annotations for each problem.                      |
@@ -123,6 +126,26 @@ each problem, writes a job summary, and fails the job if any problem is found.
 
 See [`docs/examples.md`](docs/examples.md) for config files, import paths, rule
 overrides, descriptor sets, artifact uploads and more.
+
+## Resolving Buf dependencies
+
+If your protos import types managed by [Buf](https://buf.build) — for example
+`google/api/*` pulled from the Buf Schema Registry via `buf.yaml` `deps` — set
+`buf: true`. The action runs `buf export` to materialise those dependencies onto
+disk and adds them to api-linter's import paths, so imports resolve instead of
+failing. buf is used from `PATH` when present, otherwise it is installed
+automatically.
+
+```yaml
+- uses: the-protobuf-project/setup-google-api-linter@v1
+  with:
+    buf: true
+    working-directory: proto # directory containing buf.yaml
+    paths: "**/*.proto"
+```
+
+A complete, AIP-compliant example module lives in
+[`examples/buf`](examples/buf); it is exercised end-to-end by the golden test.
 
 ## Supported runners
 

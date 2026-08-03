@@ -1,0 +1,86 @@
+// A small, AIP-idiomatic library API used to demonstrate proper Google API
+// usage. It imports types from the Google APIs Buf module (google/api/*),
+// which the action's buf integration resolves before linting.
+syntax = "proto3";
+
+package example.library.v1;
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "LibraryProto";
+option java_package = "com.example.library.v1";
+
+// Manages a collection of books within publishers.
+service LibraryService {
+  option (google.api.default_host) = "library.example.com";
+  option (google.api.oauth_scopes) = "https://www.googleapis.com/auth/cloud-platform";
+
+  // Retrieves a single book by its resource name.
+  rpc GetBook(GetBookRequest) returns (Book) {
+    option (google.api.http) = {
+      get: "/v1/{name=publishers/*/books/*}"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // Lists the books in a given publisher.
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (google.api.http) = {
+      get: "/v1/{parent=publishers/*}/books"
+    };
+    option (google.api.method_signature) = "parent";
+  }
+}
+
+// A single book resource.
+message Book {
+  option (google.api.resource) = {
+    type: "library.example.com/Book"
+    pattern: "publishers/{publisher}/books/{book}"
+    singular: "book"
+    plural: "books"
+  };
+
+  // Identifier. The resource name of the book.
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The title of the book.
+  string title = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Request message for `LibraryService.GetBook`.
+message GetBookRequest {
+  // Required. The name of the book to retrieve.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = { type: "library.example.com/Book" }
+  ];
+}
+
+// Request message for `LibraryService.ListBooks`.
+message ListBooksRequest {
+  // Required. The publisher to list books from.
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = { child_type: "library.example.com/Book" }
+  ];
+
+  // The maximum number of books to return. The service may return fewer.
+  int32 page_size = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // A page token, received from a previous `ListBooks` call.
+  string page_token = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Response message for `LibraryService.ListBooks`.
+message ListBooksResponse {
+  // The books from the requested publisher.
+  repeated Book books = 1;
+
+  // A token to retrieve the next page of results, or empty if there are none.
+  string next_page_token = 2;
+}

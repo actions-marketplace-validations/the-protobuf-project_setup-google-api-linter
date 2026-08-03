@@ -61,6 +61,23 @@ inputs:
       instead. The descriptor set must be built with source info and imports.
     required: false
     default: "false"
+  buf:
+    description: >-
+      Resolve dependencies declared in a `buf.yaml` (via `buf export`) before
+      linting, so imports such as `google/api/*` are found. buf is used from
+      PATH if present, otherwise it is installed automatically.
+    required: false
+    default: "false"
+  buf-input:
+    description: >-
+      The buf input to export when `buf` is enabled: a directory containing a
+      `buf.yaml`, relative to `working-directory`.
+    required: false
+    default: "."
+  buf-version:
+    description: "buf CLI version to install when buf is not already on PATH."
+    required: false
+    default: "latest"
   output-format:
     description: >-
       Format for the written report file: "json", "yaml", "github" or

@@ -70,6 +70,10 @@ bun run build      # bundle to dist/index.js
 
 Autofix lint and formatting problems with `bun run lint:fix`.
 
+The golden test (`tests/golden.test.ts`) exercises the real buf → api-linter
+pipeline and is skipped unless `buf` is on `PATH` and `api-linter` is on `PATH`
+or given via `API_LINTER_BIN`. The `golden` CI job installs both and runs it.
+
 ## Coding standards
 
 - **TypeScript only.** Every value, parameter and return type is typed; `any`

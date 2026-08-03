@@ -1,0 +1,48 @@
+# Golden integration test. Installs buf and a pinned api-linter, then runs the
+# golden test, which pulls the Google APIs Buf dependency, lints the example
+# API, and asserts the output matches the committed golden report.
+name: Golden
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  # Pin api-linter so the golden output is reproducible across runs.
+  API_LINTER_VERSION: "2.3.1"
+
+jobs:
+  golden:
+    name: Pull Google APIs and lint the example
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set up buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Install api-linter
+        run: |
+          set -euo pipefail
+          url="https://github.com/googleapis/api-linter/releases/download/v${API_LINTER_VERSION}/api-linter-${API_LINTER_VERSION}-linux-amd64.tar.gz"
+          curl -fsSL "$url" | tar -xz -C "$RUNNER_TEMP"
+          echo "API_LINTER_BIN=$RUNNER_TEMP/api-linter" >> "$GITHUB_ENV"
+
+      - name: Run the golden test
+        run: bun test tests/golden.test.ts

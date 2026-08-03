@@ -75,6 +75,24 @@ working directory, so `paths` and `proto-paths` are relative to it.
     fail-on-error: false
 ```
 
+## Resolve Buf Schema Registry dependencies
+
+When your protos import types from a `buf.yaml` dependency (for example
+`google/api/*`), enable `buf` so the action resolves them before linting.
+
+```yaml
+- uses: the-protobuf-project/setup-google-api-linter@v1
+  with:
+    buf: true
+    working-directory: proto # directory that contains buf.yaml
+    buf-input: "." # buf input to export, relative to working-directory
+    paths: "**/*.proto"
+```
+
+buf is used from `PATH` if available (for example after
+`bufbuild/buf-setup-action`), otherwise the action installs `buf-version`
+(default `latest`) automatically.
+
 ## Lint a precompiled descriptor set
 
 When protos are already compiled, skip compilation and lint the descriptor set

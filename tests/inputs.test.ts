@@ -10,6 +10,7 @@ import { getInputs } from "../src/inputs.ts";
 const BOOLEAN_DEFAULTS: Record<string, string> = {
   "IGNORE-COMMENT-DISABLES": "false",
   "SKIP-COMPILATION": "false",
+  BUF: "false",
   ANNOTATE: "true",
   "JOB-SUMMARY": "true",
   "FAIL-ON-ERROR": "true",
