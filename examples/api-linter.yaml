@@ -1,0 +1,18 @@
+# Example api-linter configuration file.
+#
+# Pass this to the action with `config: examples/api-linter.yaml`. Each entry
+# selects proto files by glob and enables/disables rules for them. See
+# https://linter.aip.dev/configuration for the full schema.
+- included_paths:
+    - "**/*.proto"
+  disabled_rules:
+    # Java options are irrelevant for many APIs; silence those rules globally.
+    - "core::0191::java-multiple-files"
+    - "core::0191::java-outer-classname"
+    - "core::0191::java-package"
+
+- included_paths:
+    - "examples/**/*.proto"
+  disabled_rules:
+    # Examples are illustrative and need not live in a versioned package.
+    - "core::0215::versioned-packages"

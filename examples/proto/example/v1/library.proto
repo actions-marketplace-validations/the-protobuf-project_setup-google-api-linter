@@ -1,0 +1,14 @@
+// Example proto used by the action's self-test workflow. It intentionally
+// leaves out some AIP-recommended options so the linter reports problems.
+syntax = "proto3";
+
+package example.v1;
+
+// A book in the library.
+message Book {
+  // The resource name of the book.
+  string name = 1;
+
+  // The title of the book.
+  string title = 2;
+}

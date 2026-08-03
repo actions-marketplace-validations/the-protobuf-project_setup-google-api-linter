@@ -1,0 +1,46 @@
+# Integration test: run the action against the bundled example proto to prove
+# it installs the linter, produces a report and populates its outputs on a real
+# GitHub-hosted runner. `fail-on-error` is disabled because the example proto
+# deliberately violates several AIP rules.
+name: Self test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  run-action:
+    name: Lint the example proto
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run api-linter
+        id: lint
+        uses: ./
+        with:
+          version: latest
+          paths: examples/proto/**/*.proto
+          output-path: api-linter-report.json
+          fail-on-error: false
+
+      - name: Assert the action produced results
+        run: |
+          echo "Installed version: ${{ steps.lint.outputs.version }}"
+          echo "Problem count: ${{ steps.lint.outputs.problem-count }}"
+          echo "Report path: ${{ steps.lint.outputs.results-path }}"
+          test -n "${{ steps.lint.outputs.version }}"
+          test "${{ steps.lint.outputs.problem-count }}" -gt 0
+          test -f "${{ steps.lint.outputs.results-path }}"
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-linter-report
+          path: api-linter-report.json

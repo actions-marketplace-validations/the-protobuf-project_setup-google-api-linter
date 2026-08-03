@@ -1,0 +1,50 @@
+# Continuous integration: lint, typecheck, test, build, and guard against a
+# stale committed bundle. GitHub Actions execute the committed dist/index.js,
+# so a drifted bundle would ship untested code — the "dist up to date" step
+# fails the build if `bun run build` would change the checked-in output.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, typecheck, test & build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint (biome)
+        run: bun run lint
+
+      - name: Typecheck (tsc)
+        run: bun run typecheck
+
+      - name: Test (bun test)
+        run: bun test
+
+      - name: Build bundle
+        run: bun run build
+
+      - name: Verify dist/ is up to date
+        run: |
+          if [ -n "$(git status --porcelain dist)" ]; then
+            echo "::error::dist/ is out of date. Run 'bun run build' and commit the result."
+            git --no-pager diff -- dist
+            exit 1
+          fi

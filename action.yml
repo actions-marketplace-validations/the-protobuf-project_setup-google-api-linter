@@ -1,0 +1,109 @@
+# Metadata for the "Setup Google API Linter" GitHub Action.
+#
+# This file makes the repository usable as a GitHub Action and is what the
+# GitHub Marketplace reads to render the action's listing. See:
+# https://docs.github.com/actions/creating-actions/metadata-syntax-for-github-actions
+name: "Setup Google API Linter"
+description: >-
+  Install and run the Google AIP api-linter against your Protocol Buffer files,
+  with annotations, a job summary, and optional report output.
+author: "oh-tarnished"
+
+# Marketplace branding (icon + colour) shown next to the listing.
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  version:
+    description: >-
+      Version of googleapis/api-linter to install (for example "1.69.2" or
+      "v1.69.2"). Use "latest" to resolve the newest published release.
+    required: false
+    default: "latest"
+  paths:
+    description: >-
+      Newline- or comma-separated globs selecting the proto files to lint.
+      Evaluated relative to `working-directory`.
+    required: false
+    default: "**/*.proto"
+  config:
+    description: "Path to an api-linter configuration file (YAML or JSON)."
+    required: false
+    default: ""
+  proto-paths:
+    description: >-
+      Newline- or comma-separated import search directories, passed to the
+      linter as `-I`. The working directory is always searched.
+    required: false
+    default: ""
+  enable-rules:
+    description: "Newline- or comma-separated rule names to enable."
+    required: false
+    default: ""
+  disable-rules:
+    description: "Newline- or comma-separated rule names to disable."
+    required: false
+    default: ""
+  ignore-comment-disables:
+    description: "When true, in-proto disable comments are ignored (strict mode)."
+    required: false
+    default: "false"
+  descriptor-set-in:
+    description: >-
+      Newline- or comma-separated FileDescriptorSet files used for import
+      resolution. Required when `skip-compilation` is true.
+    required: false
+    default: ""
+  skip-compilation:
+    description: >-
+      Skip proto compilation and lint the files inside `descriptor-set-in`
+      instead. The descriptor set must be built with source info and imports.
+    required: false
+    default: "false"
+  output-format:
+    description: >-
+      Format for the written report file: "json", "yaml", "github" or
+      "summary". Only used when `output-path` is set.
+    required: false
+    default: "json"
+  output-path:
+    description: >-
+      Path to write the report to. When set, the report is written in
+      `output-format` and exposed via the `results-path` output.
+    required: false
+    default: ""
+  annotate:
+    description: "Emit inline GitHub annotations for each linter problem."
+    required: false
+    default: "true"
+  job-summary:
+    description: "Write a results table to the GitHub Actions job summary."
+    required: false
+    default: "true"
+  fail-on-error:
+    description: "Fail the job when the linter reports one or more problems."
+    required: false
+    default: "true"
+  working-directory:
+    description: "Directory to resolve paths and run the linter from."
+    required: false
+    default: "."
+  github-token:
+    description: >-
+      Token used to raise GitHub API rate limits when resolving "latest" and
+      downloading the release asset.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  version:
+    description: "The concrete api-linter version that was installed."
+  problem-count:
+    description: "Total number of problems reported across all files."
+  results-path:
+    description: "Absolute path to the written report file, if `output-path` was set."
+
+runs:
+  using: "node20"
+  main: "dist/index.js"

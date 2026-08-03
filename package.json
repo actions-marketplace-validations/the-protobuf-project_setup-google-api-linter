@@ -1,0 +1,39 @@
+{
+  "name": "setup-google-api-linter",
+  "version": "1.0.0",
+  "description": "GitHub Action that installs and runs the Google AIP api-linter.",
+  "author": "oh-tarnished",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "keywords": [
+    "github-action",
+    "api-linter",
+    "aip",
+    "protobuf",
+    "proto",
+    "google",
+    "linter"
+  ],
+  "scripts": {
+    "build": "bun build src/main.ts --target=node --format=esm --outdir=dist --entry-naming=index.js --sourcemap=linked",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "bun test",
+    "all": "bun run lint && bun run typecheck && bun run test && bun run build"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/glob": "^0.7.0",
+    "@actions/http-client": "^4.0.1",
+    "@actions/tool-cache": "^4.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.6",
+    "@types/bun": "latest",
+    "typescript": "5.9.2"
+  }
+}
