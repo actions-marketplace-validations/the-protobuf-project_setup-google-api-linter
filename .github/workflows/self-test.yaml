@@ -40,7 +40,7 @@ jobs:
           test -f "${{ steps.lint.outputs.results-path }}"
 
       - name: Upload report artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-linter-report
           path: api-linter-report.json
