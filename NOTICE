@@ -1,0 +1,11 @@
+Setup Google API Linter
+Copyright 2026 The Protobuf Project
+
+This product is licensed under the Apache License, Version 2.0 (see the LICENSE
+file).
+
+This action installs and invokes the Google AIP api-linter
+(https://github.com/googleapis/api-linter), which is a separate project
+distributed by Google LLC under the Apache License, Version 2.0. The api-linter
+binary is downloaded at runtime from its official GitHub releases and is not
+redistributed as part of this repository.

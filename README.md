@@ -6,13 +6,59 @@ your Protocol Buffer files. It downloads a pinned (or the latest) linter
 release, lints your protos, and surfaces the results as inline annotations, a
 job-summary table, action outputs, and an optional report file.
 
-- ✅ Installs any published `api-linter` version (or resolves `latest`)
-- ✅ Caches the binary across runs via the Actions tool cache
-- ✅ Inline PR annotations for every rule violation
-- ✅ Job-summary table with links to each AIP rule
-- ✅ Optional machine-readable report (`json`, `yaml`, `github`, `summary`)
-- ✅ Supports config files, import paths, rule toggles and descriptor sets
-- ✅ Written entirely in documented TypeScript
+## Table of contents
+
+The table of contents below maps the whole document. Each entry is a link to
+the matching section, so you can jump straight to what you need instead of
+scrolling: skim [Features](#features) and [Quick start](#quick-start) to get
+running, use [Inputs](#inputs) and [Outputs](#outputs) as the configuration
+reference, and see [Contributing](#contributing) and [License](#license) for
+project and legal details.
+
+- [How it works](#how-it-works)
+- [Features](#features)
+- [Quick start](#quick-start)
+- [Inputs](#inputs)
+- [Outputs](#outputs)
+- [How results are surfaced](#how-results-are-surfaced)
+- [Supported runners](#supported-runners)
+- [Why the bundle is committed](#why-the-bundle-is-committed)
+- [Versioning](#versioning)
+- [Contributing](#contributing)
+- [License](#license)
+
+## How it works
+
+```mermaid
+flowchart TD
+    A[Action starts] --> B[Parse and validate inputs]
+    B --> C{version is latest?}
+    C -- yes --> D[Resolve newest release via GitHub API]
+    C -- no --> E[Normalise the pinned version]
+    D --> F[Install api-linter and cache the binary]
+    E --> F
+    F --> G[Expand proto globs]
+    G --> H[Run api-linter with JSON output]
+    H --> I[Parse the report]
+    I --> J[Inline annotations]
+    I --> K[Job-summary table]
+    I --> L[Outputs: version, problem-count, results-path]
+    I --> M{output-path set?}
+    M -- yes --> N[Write the report file]
+    J & K & L & N --> O{problems and fail-on-error?}
+    O -- yes --> P[Fail the job]
+    O -- no --> Q[Succeed]
+```
+
+## Features
+
+- Installs any published `api-linter` version, or resolves `latest`.
+- Caches the binary across runs via the Actions tool cache.
+- Inline pull-request annotations for every rule violation.
+- Job-summary table with a link to each AIP rule.
+- Optional machine-readable report (`json`, `yaml`, `github`, `summary`).
+- Supports config files, import paths, rule toggles and descriptor sets.
+- Written entirely in documented TypeScript.
 
 ## Quick start
 
@@ -26,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oh-tarnished/setup-google-api-linter@v1
+      - uses: the-protobuf-project/setup-google-api-linter@v1
         with:
           paths: proto/**/*.proto
 ```
@@ -67,7 +113,7 @@ each problem, writes a job summary, and fails the job if any problem is found.
 
 - **Annotations** — each problem becomes an inline error annotation on the
   relevant proto line (disable with `annotate: false`).
-- **Job summary** — a table of `File · Line · Rule · Message`, with each rule
+- **Job summary** — a table of file, line, rule and message, with each rule
   linking to its page on [linter.aip.dev](https://linter.aip.dev)
   (disable with `job-summary: false`).
 - **Report file** — set `output-path` to write the full report in
@@ -92,34 +138,33 @@ supports:
 Linux `arm64` is not published upstream and is therefore unsupported; the
 action fails with a clear message on unsupported hosts.
 
-## Notes
+## Why the bundle is committed
 
-- **Versioning** — reference a released major tag (`@v1`) for stability, or a
-  full SHA for maximum pinning.
+GitHub runs a JavaScript action by executing its compiled entry point directly
+from the repository at the ref you pin — it does not run `bun install` or
+`bun run build` for you. The bundled `dist/index.js` (produced by `bun run
+build`) is therefore committed to the repository, and CI fails if it drifts
+from `src/`. Rebuild and commit `dist/` after any change under `src/`.
+
+## Versioning
+
+- Reference a released major tag (`@v1`) for stability, or a full commit SHA for
+  maximum pinning.
 - **No auto-fix** — api-linter is a linter, not a formatter, so it does not
   rewrite protos. This action surfaces problems (including any `suggestion`
   fields) and can persist a report; applying changes is left to you.
 
-## Development
+## Contributing
 
-This project uses [Bun](https://bun.com).
-
-```bash
-bun install        # install dependencies
-bun run lint       # biome lint + format check
-bun run typecheck  # tsc --noEmit
-bun test           # unit tests
-bun run build      # bundle to dist/index.js
-bun run all        # everything above, in order
-```
-
-The action runs the bundled `dist/index.js`, so **commit `dist/` after every
-change to `src/`**. CI (`.github/workflows/ci.yml`) fails if the committed
-bundle is stale. Every source file is kept under 200 lines.
+Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the
+development workflow, coding standards, and how to run `bun run all` before
+opening a pull request. In short: this project uses [Bun](https://bun.com), all
+code is documented TypeScript, and every file stays under 200 lines.
 
 ## License
 
-[MIT](LICENSE) © oh-tarnished
+Licensed under the Apache License, Version 2.0. See [`LICENSE`](LICENSE) for the
+full text and [`NOTICE`](NOTICE) for attribution.
 
-`api-linter` is a Google project distributed under the Apache-2.0 license; this
-action merely installs and invokes it.
+`api-linter` is a separate Google project, also under Apache-2.0; this action
+installs and invokes it but does not redistribute it.

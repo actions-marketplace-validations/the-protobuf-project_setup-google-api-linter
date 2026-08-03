@@ -6,7 +6,7 @@ More complete workflows for **Setup Google API Linter**. See the
 ## Pin a specific linter version
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     version: "1.69.2"
     paths: proto/**/*.proto
@@ -15,7 +15,7 @@ More complete workflows for **Setup Google API Linter**. See the
 ## Use a configuration file
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     config: api-linter.yaml
     paths: proto/**/*.proto
@@ -24,7 +24,7 @@ More complete workflows for **Setup Google API Linter**. See the
 ## Import paths and rule overrides
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     paths: apis/**/*.proto
     proto-paths: |
@@ -40,7 +40,7 @@ More complete workflows for **Setup Google API Linter**. See the
 ## Write a report and upload it as an artifact
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   id: lint
   with:
     paths: proto/**/*.proto
@@ -60,7 +60,7 @@ More complete workflows for **Setup Google API Linter**. See the
 working directory, so `paths` and `proto-paths` are relative to it.
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     working-directory: backend
     paths: proto/**/*.proto
@@ -69,7 +69,7 @@ working directory, so `paths` and `proto-paths` are relative to it.
 ## Report but do not fail the build
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     paths: proto/**/*.proto
     fail-on-error: false
@@ -82,7 +82,7 @@ directly. `descriptor-set-in` must be built with `--include_source_info` and
 `--include_imports`.
 
 ```yaml
-- uses: oh-tarnished/setup-google-api-linter@v1
+- uses: the-protobuf-project/setup-google-api-linter@v1
   with:
     skip-compilation: true
     descriptor-set-in: build/descriptor.pb
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oh-tarnished/setup-google-api-linter@v1
+      - uses: the-protobuf-project/setup-google-api-linter@v1
         with:
           paths: proto/**/*.proto
 ```

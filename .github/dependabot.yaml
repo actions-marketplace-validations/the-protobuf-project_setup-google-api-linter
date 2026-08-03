@@ -1,0 +1,39 @@
+# Dependabot configuration.
+#
+# This file enables Dependabot *version updates* (automated dependency-bump
+# pull requests). Dependabot *security alerts* are enabled separately in the
+# repository settings under Security > Code security and analysis; keep both on.
+#
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+updates:
+  # JavaScript/TypeScript dependencies (package.json + bun.lock).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Bundle the @actions/* toolkit bumps into a single PR.
+      actions-toolkit:
+        patterns:
+          - "@actions/*"
+      dev-dependencies:
+        dependency-type: "development"
+
+  # The GitHub Actions used by this repo's own workflows (CI, self-test).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"

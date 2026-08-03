@@ -2,10 +2,18 @@
   "name": "setup-google-api-linter",
   "version": "1.0.0",
   "description": "GitHub Action that installs and runs the Google AIP api-linter.",
-  "author": "oh-tarnished",
-  "license": "MIT",
+  "author": "the-protobuf-project",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-protobuf-project/setup-google-api-linter.git"
+  },
+  "homepage": "https://github.com/the-protobuf-project/setup-google-api-linter#readme",
+  "bugs": {
+    "url": "https://github.com/the-protobuf-project/setup-google-api-linter/issues"
+  },
   "keywords": [
     "github-action",
     "api-linter",
