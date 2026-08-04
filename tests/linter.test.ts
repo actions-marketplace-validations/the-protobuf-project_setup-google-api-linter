@@ -18,6 +18,8 @@ function makeInputs(overrides: Partial<ActionInputs> = {}): ActionInputs {
     skipCompilation: false,
     buf: false,
     bufInput: ".",
+    bufConfig: "",
+    bufPath: "",
     bufVersion: "latest",
     outputFormat: "json",
     outputPath: "",

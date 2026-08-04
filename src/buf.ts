@@ -19,15 +19,25 @@ import type { ActionInputs } from "./types.ts";
 /**
  * Export a Buf module's dependencies (and files) to a fresh temp directory.
  *
- * @param buf - The buf command or path from {@link ensureBuf}.
+ * @param buf - The buf command or path to invoke.
  * @param input - The buf input to export (a directory containing `buf.yaml`).
+ * @param config - Optional explicit `buf.yaml` path (passed as `--config`).
  * @param cwd - Working directory to resolve `input` against.
  * @returns The absolute path to the directory the deps were exported into.
  * @throws If `buf export` fails.
  */
-async function exportDeps(buf: string, input: string, cwd: string): Promise<string> {
+async function exportDeps(
+  buf: string,
+  input: string,
+  config: string,
+  cwd: string,
+): Promise<string> {
   const vendorDir = fs.mkdtempSync(path.join(os.tmpdir(), "buf-export-"));
-  const result = await exec.getExecOutput(buf, ["export", input, "-o", vendorDir], {
+  const args = ["export", input, "-o", vendorDir];
+  if (config) {
+    args.push("--config", config);
+  }
+  const result = await exec.getExecOutput(buf, args, {
     cwd,
     ignoreReturnCode: true,
     silent: true,
@@ -39,14 +49,38 @@ async function exportDeps(buf: string, input: string, cwd: string): Promise<stri
 }
 
 /**
- * Ensure buf is installed and export the configured module's dependencies.
+ * Resolve the buf executable to use: an explicit `buf-path`, otherwise buf from
+ * `PATH`, otherwise an auto-installed release.
+ *
+ * @param inputs - The parsed action inputs.
+ * @returns The buf command or path to invoke.
+ * @throws If an explicit `buf-path` is given but does not exist.
+ */
+async function resolveBuf(inputs: ActionInputs): Promise<string> {
+  if (inputs.bufPath) {
+    if (!fs.existsSync(inputs.bufPath)) {
+      throw new Error(`buf-path does not exist: ${inputs.bufPath}`);
+    }
+    core.info(`Using buf from buf-path: ${inputs.bufPath}`);
+    return inputs.bufPath;
+  }
+  return ensureBuf(inputs.bufVersion, inputs.githubToken);
+}
+
+/**
+ * Ensure buf is available and export the configured module's dependencies.
  *
  * @param inputs - The parsed action inputs (uses the `buf*` fields).
  * @returns The vendor directory to add to api-linter's import paths.
  */
 export async function resolveBufImports(inputs: ActionInputs): Promise<string> {
-  const buf = await ensureBuf(inputs.bufVersion, inputs.githubToken);
-  const vendorDir = await exportDeps(buf, inputs.bufInput, inputs.workingDirectory);
+  const buf = await resolveBuf(inputs);
+  const vendorDir = await exportDeps(
+    buf,
+    inputs.bufInput,
+    inputs.bufConfig,
+    inputs.workingDirectory,
+  );
   core.info(`Resolved buf.yaml dependencies into import path: ${vendorDir}`);
   return vendorDir;
 }

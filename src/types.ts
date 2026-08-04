@@ -75,6 +75,10 @@ export interface ActionInputs {
   readonly buf: boolean;
   /** The buf input to export (a directory containing `buf.yaml`). */
   readonly bufInput: string;
+  /** Explicit path to a `buf.yaml` config, passed to buf via `--config`. */
+  readonly bufConfig: string;
+  /** Explicit path to the buf executable; overrides PATH and auto-install. */
+  readonly bufPath: string;
   /** buf CLI version to install when buf is not already on `PATH`. */
   readonly bufVersion: string;
   /** Format for the written report file. */

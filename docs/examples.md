@@ -91,7 +91,18 @@ When your protos import types from a `buf.yaml` dependency (for example
 
 buf is used from `PATH` if available (for example after
 `bufbuild/buf-setup-action`), otherwise the action installs `buf-version`
-(default `latest`) automatically.
+(default `latest`) automatically. Point `buf-path` at your own `buf` binary to
+skip both, and set `buf-config` to a `buf.yaml` path when it lives outside the
+input directory:
+
+```yaml
+- uses: the-protobuf-project/setup-google-api-linter@v1
+  with:
+    buf: true
+    buf-config: config/buf.yaml # explicit buf.yaml path
+    buf-path: /usr/local/bin/buf # optional custom buf binary
+    paths: "**/*.proto"
+```
 
 ## Lint a precompiled descriptor set
 

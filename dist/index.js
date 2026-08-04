@@ -21592,9 +21592,13 @@ async function ensureBuf(requestedVersion, token) {
 }
 
 // src/buf.ts
-async function exportDeps(buf, input, cwd) {
+async function exportDeps(buf, input, config, cwd) {
   const vendorDir = fs5.mkdtempSync(path7.join(os7.tmpdir(), "buf-export-"));
-  const result = await getExecOutput(buf, ["export", input, "-o", vendorDir], {
+  const args = ["export", input, "-o", vendorDir];
+  if (config) {
+    args.push("--config", config);
+  }
+  const result = await getExecOutput(buf, args, {
     cwd,
     ignoreReturnCode: true,
     silent: true
@@ -21604,9 +21608,19 @@ async function exportDeps(buf, input, cwd) {
   }
   return vendorDir;
 }
+async function resolveBuf(inputs) {
+  if (inputs.bufPath) {
+    if (!fs5.existsSync(inputs.bufPath)) {
+      throw new Error(`buf-path does not exist: ${inputs.bufPath}`);
+    }
+    info(`Using buf from buf-path: ${inputs.bufPath}`);
+    return inputs.bufPath;
+  }
+  return ensureBuf(inputs.bufVersion, inputs.githubToken);
+}
 async function resolveBufImports(inputs) {
-  const buf = await ensureBuf(inputs.bufVersion, inputs.githubToken);
-  const vendorDir = await exportDeps(buf, inputs.bufInput, inputs.workingDirectory);
+  const buf = await resolveBuf(inputs);
+  const vendorDir = await exportDeps(buf, inputs.bufInput, inputs.bufConfig, inputs.workingDirectory);
   info(`Resolved buf.yaml dependencies into import path: ${vendorDir}`);
   return vendorDir;
 }
@@ -24074,6 +24088,8 @@ function getInputs() {
     skipCompilation,
     buf: getBooleanInput("buf"),
     bufInput: getInput("buf-input").trim() || ".",
+    bufConfig: getInput("buf-config").trim(),
+    bufPath: getInput("buf-path").trim(),
     bufVersion: getInput("buf-version").trim() || "latest",
     outputFormat: parseOutputFormat(getInput("output-format") || "json"),
     outputPath: getInput("output-path").trim(),

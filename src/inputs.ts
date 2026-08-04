@@ -72,6 +72,8 @@ export function getInputs(): ActionInputs {
     skipCompilation,
     buf: core.getBooleanInput("buf"),
     bufInput: core.getInput("buf-input").trim() || ".",
+    bufConfig: core.getInput("buf-config").trim(),
+    bufPath: core.getInput("buf-path").trim(),
     bufVersion: core.getInput("buf-version").trim() || "latest",
     outputFormat: parseOutputFormat(core.getInput("output-format") || "json"),
     outputPath: core.getInput("output-path").trim(),

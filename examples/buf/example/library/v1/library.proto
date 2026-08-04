@@ -21,17 +21,13 @@ service LibraryService {
 
   // Retrieves a single book by its resource name.
   rpc GetBook(GetBookRequest) returns (Book) {
-    option (google.api.http) = {
-      get: "/v1/{name=publishers/*/books/*}"
-    };
+    option (google.api.http) = {get: "/v1/{name=publishers/*/books/*}"};
     option (google.api.method_signature) = "name";
   }
 
   // Lists the books in a given publisher.
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
-    option (google.api.http) = {
-      get: "/v1/{parent=publishers/*}/books"
-    };
+    option (google.api.http) = {get: "/v1/{parent=publishers/*}/books"};
     option (google.api.method_signature) = "parent";
   }
 }
@@ -57,7 +53,7 @@ message GetBookRequest {
   // Required. The name of the book to retrieve.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = { type: "library.example.com/Book" }
+    (google.api.resource_reference) = {type: "library.example.com/Book"}
   ];
 }
 
@@ -66,7 +62,7 @@ message ListBooksRequest {
   // Required. The publisher to list books from.
   string parent = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = { child_type: "library.example.com/Book" }
+    (google.api.resource_reference) = {child_type: "library.example.com/Book"}
   ];
 
   // The maximum number of books to return. The service may return fewer.

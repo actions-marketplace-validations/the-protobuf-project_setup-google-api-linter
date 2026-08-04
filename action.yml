@@ -74,6 +74,18 @@ inputs:
       `buf.yaml`, relative to `working-directory`.
     required: false
     default: "."
+  buf-config:
+    description: >-
+      Path to a specific `buf.yaml` config, passed to buf as `--config`. Use
+      this to point at a `buf.yaml` that lives outside the buf input directory.
+    required: false
+    default: ""
+  buf-path:
+    description: >-
+      Explicit path to a `buf` executable. When set, it is used as-is instead of
+      looking on PATH or installing buf.
+    required: false
+    default: ""
   buf-version:
     description: "buf CLI version to install when buf is not already on PATH."
     required: false

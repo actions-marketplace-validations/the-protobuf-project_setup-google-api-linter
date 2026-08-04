@@ -95,6 +95,8 @@ each problem, writes a job summary, and fails the job if any problem is found.
 | `skip-compilation`        | `false`        | Skip compilation and lint `descriptor-set-in` instead.                |
 | `buf`                     | `false`        | Resolve `buf.yaml` dependencies (via buf) before linting.             |
 | `buf-input`               | `.`            | buf input to export when `buf` is enabled (a dir with `buf.yaml`).    |
+| `buf-config`              | `""`           | Path to a specific `buf.yaml`, passed to buf as `--config`.           |
+| `buf-path`                | `""`           | Path to a `buf` executable; used instead of PATH/auto-install.        |
 | `buf-version`             | `latest`       | buf CLI version to install when buf is not already on PATH.           |
 | `output-format`           | `json`         | Report file format: `json`, `yaml`, `github` or `summary`.            |
 | `output-path`             | `""`           | Where to write the report. When set, exposed via `results-path`.      |
@@ -134,7 +136,8 @@ If your protos import types managed by [Buf](https://buf.build) — for example
 `buf: true`. The action runs `buf export` to materialise those dependencies onto
 disk and adds them to api-linter's import paths, so imports resolve instead of
 failing. buf is used from `PATH` when present, otherwise it is installed
-automatically.
+automatically — or point `buf-path` at your own `buf` executable. To use a
+`buf.yaml` that lives outside the input directory, set `buf-config` to its path.
 
 ```yaml
 - uses: the-protobuf-project/setup-google-api-linter@v1
