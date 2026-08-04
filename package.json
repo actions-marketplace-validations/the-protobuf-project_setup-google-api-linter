@@ -24,7 +24,7 @@
     "linter"
   ],
   "scripts": {
-    "build": "bun build src/main.ts --target=node --format=esm --outdir=dist --entry-naming=index.js",
+    "build": "bun build src/main.ts --target=node --format=esm --outdir=dist --entry-naming=index.js && bun run scripts/postbuild.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
