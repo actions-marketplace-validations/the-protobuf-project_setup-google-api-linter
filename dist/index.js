@@ -21209,7 +21209,7 @@ class RetryHelper {
 }
 
 // node_modules/@actions/tool-cache/lib/tool-cache.js
-var __dirname = "/Users/srikanthkandarp/Projects/personal/the-protobuf-project/google-api-linter-github-action/node_modules/@actions/tool-cache/lib";
+var __dirname = "node_modules/@actions/tool-cache/lib";
 var __awaiter8 = function(thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function(resolve2) {

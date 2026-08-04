@@ -1,7 +1,7 @@
-# Continuous integration: lint, typecheck, test, build, and guard against a
-# stale committed bundle. GitHub Actions execute the committed dist/index.js,
-# so a drifted bundle would ship untested code — the "dist up to date" step
-# fails the build if `bun run build` would change the checked-in output.
+# Continuous integration. Each check runs as its own job so failures are
+# isolated and the jobs run in parallel. The `build` job also guards against a
+# stale committed bundle: GitHub Actions execute the committed dist/index.js, so
+# a drifted bundle would ship untested code.
 name: CI
 
 on:
@@ -14,33 +14,65 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Lint, typecheck, test & build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
       - name: Lint (biome)
         run: bun run lint
 
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
       - name: Typecheck (tsc)
         run: bun run typecheck
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
       - name: Test (bun test)
         run: bun test
 
+  build:
+    name: Build & verify bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
       - name: Build bundle
         run: bun run build
-
       - name: Verify dist/ is up to date
         run: |
           if [ -n "$(git status --porcelain dist)" ]; then
