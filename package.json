@@ -1,6 +1,6 @@
 {
   "name": "setup-google-api-linter",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "GitHub Action that installs and runs the Google AIP api-linter.",
   "author": "the-protobuf-project",
   "license": "Apache-2.0",
