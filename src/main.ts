@@ -15,9 +15,10 @@ import { copyReport, ensureParentDir, resolveProtoFiles } from "./files.ts";
 import { getInputs } from "./inputs.ts";
 import { installApiLinter } from "./installer.ts";
 import { buildArgs, runLinter } from "./linter.ts";
+import { resolvePlatform } from "./platform.ts";
+import { resolveInstallTarget } from "./release.ts";
 import { annotate, countProblems, parseReport, writeSummary } from "./report.ts";
 import type { ActionInputs, LintReport } from "./types.ts";
-import { resolveVersion } from "./version.ts";
 
 /**
  * Run the linter once, capturing structured JSON into a temp file, and parse
@@ -89,8 +90,9 @@ async function writeReportFile(
 async function run(): Promise<void> {
   const inputs = getInputs();
 
-  const version = await resolveVersion(inputs.version, inputs.githubToken);
-  const binary = await installApiLinter(version);
+  const target = await resolveInstallTarget(inputs.version, inputs.githubToken, resolvePlatform());
+  const binary = await installApiLinter(target);
+  const version = target.version;
   core.setOutput("version", version);
 
   const files = inputs.skipCompilation

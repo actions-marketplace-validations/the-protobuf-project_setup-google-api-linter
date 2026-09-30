@@ -1,7 +1,7 @@
 /** Unit tests for host → api-linter release-asset mapping. */
 
 import { describe, expect, test } from "bun:test";
-import { assetName, assetUrl, resolvePlatform } from "../src/platform.ts";
+import { assetMatchesPlatform, assetName, assetUrl, resolvePlatform } from "../src/platform.ts";
 
 describe("resolvePlatform", () => {
   test("maps macOS arm64 to darwin/arm64", () => {
@@ -52,5 +52,39 @@ describe("assetName / assetUrl", () => {
     expect(assetUrl("1.69.2", platform)).toBe(
       "https://github.com/googleapis/api-linter/releases/download/v1.69.2/api-linter-1.69.2-linux-amd64.tar.gz",
     );
+  });
+});
+
+describe("assetMatchesPlatform", () => {
+  const linux = resolvePlatform("linux", "x64");
+  const linuxArm = resolvePlatform("linux", "arm");
+  const windows = resolvePlatform("win32", "x64");
+
+  test("matches the host's per-platform tarball", () => {
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-amd64.tar.gz", linux)).toBe(true);
+  });
+
+  test("accepts a .tgz extension", () => {
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-amd64.tgz", linux)).toBe(true);
+  });
+
+  test("rejects another platform's tarball", () => {
+    expect(assetMatchesPlatform("api-linter-2.3.1-darwin-arm64.tar.gz", linux)).toBe(false);
+    expect(assetMatchesPlatform("api-linter-2.3.1-windows-amd64.tar.gz", linux)).toBe(false);
+  });
+
+  test("rejects a bare name that encodes no platform", () => {
+    expect(assetMatchesPlatform("api-linter.tar.gz", linux)).toBe(false);
+    expect(assetMatchesPlatform("api-linter.tar.gz", windows)).toBe(false);
+  });
+
+  test("stops linux-arm matching inside linux-arm64", () => {
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-arm64.tar.gz", linuxArm)).toBe(false);
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-arm.tar.gz", linuxArm)).toBe(true);
+  });
+
+  test("rejects non-tar archives and checksum files", () => {
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-amd64.zip", linux)).toBe(false);
+    expect(assetMatchesPlatform("api-linter-2.3.1-linux-amd64.tar.gz.sha256", linux)).toBe(false);
   });
 });
