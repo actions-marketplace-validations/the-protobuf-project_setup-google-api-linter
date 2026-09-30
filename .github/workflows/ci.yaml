@@ -29,6 +29,19 @@ jobs:
       - name: Lint (biome)
         run: bun run lint
 
+  metadata:
+    name: Check action.yml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Check action.yml is publishable
+        run: bun run check:metadata
+
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest

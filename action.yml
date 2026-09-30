@@ -5,8 +5,8 @@
 # https://docs.github.com/actions/creating-actions/metadata-syntax-for-github-actions
 name: "Setup Google API Linter"
 description: >-
-  Install and run the Google AIP api-linter against your Protocol Buffer files,
-  with annotations, a job summary, and optional report output.
+  Install and run the Google AIP api-linter on your Protocol Buffer files, with
+  annotations, a job summary, and reports.
 author: "the-protobuf-project"
 
 # Marketplace branding (icon + colour) shown next to the listing.

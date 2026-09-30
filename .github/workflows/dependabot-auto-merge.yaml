@@ -1,0 +1,155 @@
+# Dependabot auto-merge.
+#
+# Dependabot opens the pull request (see .github/dependabot.yml); this workflow
+# decides whether it can land unattended:
+#
+#   1. `dist/index.js` is committed and bundles the `@actions/*` runtime
+#      dependencies, so a toolkit bump leaves the committed bundle stale and the
+#      CI "Build & verify bundle" job red. The bundle is rebuilt here and pushed
+#      to Dependabot's branch, which is what lets CI go green at all.
+#   2. Patch and minor updates are approved and queued with GitHub's auto-merge,
+#      which merges them only once every required status check passes. Major
+#      updates are commented on and left for a human.
+#
+# Requires, in repository settings:
+#   - "Allow auto-merge" enabled, otherwise `gh pr merge --auto` errors.
+#   - Branch protection on `main` with the CI jobs as required status checks.
+#     Auto-merge waits on required checks, so without them a queued pull request
+#     merges immediately and the "only if CI passes" guarantee is lost.
+#
+# Optionally set the `BUNDLE_PUSH_TOKEN` *Dependabot* secret (Settings >
+# Secrets and variables > Dependabot) to a fine-grained PAT or GitHub App token
+# with content write access. A push made with the default GITHUB_TOKEN does not
+# re-trigger workflows, so a rebuilt bundle would sit on a head commit that CI
+# never runs against and auto-merge would wait forever. Without the secret this
+# workflow still rebuilds and pushes, then fails with an explanation so a
+# maintainer can re-run the checks by hand.
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  auto-merge:
+    name: Rebuild the bundle and queue the merge
+    # Only Dependabot's own pull requests; anything else is reviewed normally.
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      # Push the rebuilt bundle to the pull request branch.
+      contents: write
+      # Approve the pull request and enable auto-merge on it.
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ github.token }}
+
+      - name: Explain why a major update was left alone
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_URL" --body \
+            "Major update to \`${DEPENDENCY_NAMES}\`: not queued for auto-merge. Review and merge it by hand."
+
+      # The `secrets` context cannot be read from a step `if`, so its presence
+      # is recorded as an output instead.
+      - name: Detect the bundle push token
+        id: token
+        env:
+          BUNDLE_PUSH_TOKEN: ${{ secrets.BUNDLE_PUSH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${BUNDLE_PUSH_TOKEN:-}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout the pull request branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Pushing with this token is what re-triggers CI on the new commit.
+          token: ${{ secrets.BUNDLE_PUSH_TOKEN || github.token }}
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Bun does not run dependency lifecycle scripts unless they are listed in
+      # `trustedDependencies`, so installing a bumped dependency here does not
+      # execute its install hooks alongside a write-scoped token.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Rebuild the bundle
+        id: bundle
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script, so a dependency name cannot inject shell.
+          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          bun run build
+          if [ -z "$(git status --porcelain dist)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "The committed bundle already matches this update."
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist
+          git commit -m "build: rebuild dist for ${DEPENDENCY_NAMES}"
+          git push origin "HEAD:${HEAD_REF}"
+          echo "Pushed a rebuilt bundle for ${DEPENDENCY_NAMES}."
+
+      # With the token set, that push starts a fresh run of this workflow
+      # against the new head commit; that run finds the bundle clean and queues
+      # the merge, so this run has nothing left to do.
+      - name: Defer to the run for the rebuilt commit
+        if: steps.bundle.outputs.changed == 'true' && steps.token.outputs.present == 'true'
+        run: echo "Bundle pushed; the run for the new head commit takes over."
+
+      - name: Report that the rebuilt commit needs a check re-run
+        if: steps.bundle.outputs.changed == 'true' && steps.token.outputs.present != 'true'
+        run: |
+          echo "::error::Pushed a rebuilt bundle with GITHUB_TOKEN, which does not re-trigger workflows. Re-run the checks on the new head commit and merge, or set the BUNDLE_PUSH_TOKEN Dependabot secret to automate this."
+          exit 1
+
+      - name: Approve the pull request
+        if: |
+          steps.bundle.outputs.changed == 'false'
+          && steps.metadata.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          set -euo pipefail
+          gh pr review --approve "$PR_URL" \
+            --body "Automated approval of a Dependabot ${UPDATE_TYPE} update."
+
+      - name: Enable auto-merge
+        if: |
+          steps.bundle.outputs.changed == 'false'
+          && steps.metadata.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          gh pr merge --auto --squash "$PR_URL"
+          echo "Queued for merge; GitHub will merge it once the required checks pass."
