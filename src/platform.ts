@@ -94,3 +94,33 @@ export function assetUrl(version: string, platform: Platform): string {
   const file = assetName(version, platform);
   return `https://github.com/googleapis/api-linter/releases/download/v${version}/${file}`;
 }
+
+/** Archive extensions the installer knows how to extract. */
+const TAR_EXTENSION = /\.(?:tar\.gz|tgz)$/i;
+
+/**
+ * Report whether a release asset is the build for the given platform.
+ *
+ * Matching is by the `-<os>-<arch>` token api-linter puts in its asset names,
+ * required to end on a token boundary so `linux-arm` does not match a
+ * `linux-arm64` asset. Names carrying no platform tokens (such as the bare
+ * `api-linter.tar.gz` published for v2.4.0, which holds a Windows binary) are
+ * rejected: there is no way to tell what host they are for, and installing the
+ * wrong architecture fails later and less clearly.
+ *
+ * @param name - The release asset filename.
+ * @param platform - The resolved target platform.
+ * @returns True when the asset is an extractable build for this platform.
+ */
+export function assetMatchesPlatform(name: string, platform: Platform): boolean {
+  if (!TAR_EXTENSION.test(name)) {
+    return false;
+  }
+  const token = `-${platform.os}-${platform.arch}`;
+  const index = name.toLowerCase().indexOf(token.toLowerCase());
+  if (index === -1) {
+    return false;
+  }
+  const next = name.charAt(index + token.length);
+  return next === "" || !/[0-9a-z]/i.test(next);
+}

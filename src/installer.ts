@@ -9,7 +9,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as core from "@actions/core";
 import * as tc from "@actions/tool-cache";
-import { assetUrl, resolvePlatform } from "./platform.ts";
+import { resolvePlatform } from "./platform.ts";
+import type { InstallTarget } from "./release.ts";
 import type { Platform } from "./types.ts";
 
 /** Tool-cache identifier under which the binary directory is stored. */
@@ -34,15 +35,26 @@ function findCached(version: string, platform: Platform): string | undefined {
 /**
  * Download and extract api-linter, storing the binary in the tool cache.
  *
- * @param version - Concrete version, without a leading `v`.
+ * @param target - The resolved version and download URL.
  * @param platform - The resolved target platform.
  * @returns The absolute path to the extracted, executable binary.
  */
-async function download(version: string, platform: Platform): Promise<string> {
-  const url = assetUrl(version, platform);
+async function download(target: InstallTarget, platform: Platform): Promise<string> {
+  const { version, url } = target;
   core.info(`Downloading api-linter from ${url}`);
 
-  const archive = await tc.downloadTool(url);
+  let archive: string;
+  try {
+    archive = await tc.downloadTool(url);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Could not download api-linter ${version} for ${platform.os}-${platform.arch} ` +
+        `from ${url}: ${detail}. Not every release publishes a build for every ` +
+        "platform — v2.4.0, for instance, attached only a Windows binary. " +
+        'Use version: "latest" to select the newest release that has one.',
+    );
+  }
   const extracted = await tc.extractTar(archive);
   const cachedDir = await tc.cacheDir(extracted, TOOL_NAME, version, platform.arch);
 
@@ -59,14 +71,15 @@ async function download(version: string, platform: Platform): Promise<string> {
 /**
  * Ensure api-linter of the requested version is installed and on `PATH`.
  *
- * @param version - Concrete version, without a leading `v`.
+ * @param target - The resolved version and download URL.
  * @returns The absolute path to the api-linter binary.
  */
-export async function installApiLinter(version: string): Promise<string> {
+export async function installApiLinter(target: InstallTarget): Promise<string> {
   const platform = resolvePlatform();
+  const { version } = target;
 
   const cached = findCached(version, platform);
-  const binary = cached ?? (await download(version, platform));
+  const binary = cached ?? (await download(target, platform));
   if (cached) {
     core.info(`Using cached api-linter ${version}.`);
   }

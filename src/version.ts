@@ -1,9 +1,14 @@
 /**
- * Resolves the requested api-linter version to a concrete semantic version.
+ * Resolves a requested version to a concrete semantic version.
  *
  * `"latest"` is resolved by querying the GitHub releases API; explicit versions
  * are simply normalised (a leading `v` is stripped). The result never carries a
- * `v` prefix, matching how api-linter names its release assets.
+ * `v` prefix, matching how release assets are named.
+ *
+ * This resolves a tag only, which is enough for projects that publish the same
+ * asset set on every release (buf). Choosing an api-linter version additionally
+ * depends on which assets a release actually attached, so that lives in
+ * `release.ts`.
  */
 
 import * as core from "@actions/core";
@@ -72,18 +77,4 @@ export async function resolveReleaseVersion(
     return version;
   }
   return stripLeadingV(requested);
-}
-
-/** GitHub repository that publishes api-linter releases. */
-const API_LINTER_REPO = "googleapis/api-linter";
-
-/**
- * Resolve the `version` input to a concrete api-linter version.
- *
- * @param requested - The raw `version` input ("latest" or an explicit version).
- * @param token - Optional GitHub token for the "latest" lookup.
- * @returns The concrete version, without a leading `v`.
- */
-export function resolveVersion(requested: string, token: string): Promise<string> {
-  return resolveReleaseVersion(API_LINTER_REPO, requested, token);
 }

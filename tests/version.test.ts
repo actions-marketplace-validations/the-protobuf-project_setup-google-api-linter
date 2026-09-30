@@ -1,7 +1,7 @@
-/** Unit tests for version normalisation and explicit-version resolution. */
+/** Unit tests for version normalisation. */
 
 import { describe, expect, test } from "bun:test";
-import { resolveVersion, stripLeadingV } from "../src/version.ts";
+import { resolveReleaseVersion, stripLeadingV } from "../src/version.ts";
 
 describe("stripLeadingV", () => {
   test("removes a lowercase v prefix", () => {
@@ -21,12 +21,12 @@ describe("stripLeadingV", () => {
   });
 });
 
-describe("resolveVersion", () => {
+describe("resolveReleaseVersion", () => {
   test("normalises an explicit version without touching the network", async () => {
-    await expect(resolveVersion("v1.69.2", "")).resolves.toBe("1.69.2");
+    await expect(resolveReleaseVersion("bufbuild/buf", "v1.47.2", "")).resolves.toBe("1.47.2");
   });
 
   test("passes bare explicit versions straight through", async () => {
-    await expect(resolveVersion("1.68.0", "")).resolves.toBe("1.68.0");
+    await expect(resolveReleaseVersion("bufbuild/buf", "1.47.2", "")).resolves.toBe("1.47.2");
   });
 });

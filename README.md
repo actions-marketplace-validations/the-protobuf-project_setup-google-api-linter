@@ -33,7 +33,7 @@ project and legal details.
 flowchart TD
     A[Action starts] --> B[Parse and validate inputs]
     B --> C{version is latest?}
-    C -- yes --> D[Resolve newest release via GitHub API]
+    C -- yes --> D[Resolve newest release with a build for this host]
     C -- no --> E[Normalise the pinned version]
     D --> F[Install api-linter and cache the binary]
     E --> F
@@ -163,6 +163,18 @@ supports:
 
 Linux `arm64` is not published upstream and is therefore unsupported; the
 action fails with a clear message on unsupported hosts.
+
+### Releases with missing builds
+
+Not every upstream release attaches a build for every platform. api-linter
+v2.4.0, for example, published a single `api-linter.tar.gz` containing a
+Windows binary and no Linux or macOS build at all.
+
+`version: latest` therefore selects the newest release that actually publishes
+an asset for the host platform, logging a warning for each release it skips,
+rather than resolving to the newest tag and failing the download. A pinned
+`version` is used as given: if that release has no build for the host, the
+action fails with a message naming the platform and the URL it tried.
 
 ## Why the bundle is committed
 
